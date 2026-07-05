@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-connect
+  namespace: kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-connect
+  template:
+    metadata:
+      labels:
+        app: kafka-connect
+    spec:
+      containers:
+        - name: kafka-connect
+          image: quay.io/debezium/connect:2.5
+          ports:
+            - containerPort: 8083
+          env:
+            - name: BOOTSTRAP_SERVERS
+              value: "cdc-kafka-kafka-bootstrap:9092"
+            - name: GROUP_ID
+              value: "cdc-connect-cluster"
+            - name: CONFIG_STORAGE_TOPIC
+              value: "cdc-connect-configs"
+            - name: OFFSET_STORAGE_TOPIC
+              value: "cdc-connect-offsets"
+            - name: STATUS_STORAGE_TOPIC
+              value: "cdc-connect-status"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-connect
+  namespace: kafka
+spec:
+  selector:
+    app: kafka-connect
+  ports:
+    - port: 8083
+      targetPort: 8083

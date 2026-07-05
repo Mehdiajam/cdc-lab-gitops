@@ -1,0 +1,14 @@
+{
+  "name": "windows-postgres-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "database.hostname": "host.docker.internal",
+    "database.port": "5432",
+    "database.user": "postgres",
+    "database.password": "",
+    "database.dbname": "PharmacieDB",
+    "topic.prefix": "winpg",
+    "plugin.name": "pgoutput",
+    "table.include.list": "public.Clients"
+  }
+}

@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: kafka-connect
-          image: quay.io/debezium/connect:2.5
+          image: quay.io/debezium/connect:3.0
           ports:
             - containerPort: 8083
           env:

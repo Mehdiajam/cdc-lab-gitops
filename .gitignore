@@ -1,1 +1,2 @@
 *.tmp
+connector-configs/*.json

@@ -1,3 +1,4 @@
+# Strimzi Kafka Cluster Manifest
 apiVersion: kafka.strimzi.io/v1
 kind: KafkaNodePool
 metadata:

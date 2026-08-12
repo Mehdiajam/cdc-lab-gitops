@@ -12,9 +12,12 @@ spec:
     - controller
     - broker
   storage:
-    type: persistent-claim
-    size: 2Gi
-    deleteClaim: false
+    type: jbod
+    volumes:
+    - id: 0
+      type: persistent-claim
+      size: 2Gi
+      deleteClaim: false
 ---
 apiVersion: kafka.strimzi.io/v1
 kind: Kafka

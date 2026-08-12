@@ -1,0 +1,16 @@
+{
+  "name": "postgres-sink-connector-local",
+  "config": {
+    "connector.class": "io.debezium.connector.jdbc.JdbcSinkConnector",
+    "tasks.max": "1",
+    "topics": "mysqlcdc.cdc_test.customers",
+    "connection.url": "jdbc:postgresql://host.docker.internal:5432/cdc-project",
+    "connection.username": "${env:POSTGRES_USER}",
+    "connection.password": "${env:POSTGRES_PASSWORD}",
+    "insert.mode": "upsert",
+    "delete.enabled": "true",
+    "primary.key.mode": "record_key",
+    "schema.evolution": "basic",
+    "database.time_zone": "UTC"
+  }
+}

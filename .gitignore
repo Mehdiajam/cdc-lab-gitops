@@ -1,4 +1,3 @@
 *.tmp
-connector-configs/*.json
-connector-configs/*.yaml
+
 secrets.yaml

@@ -1,0 +1,17 @@
+{
+  "name": "mysql-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+    "tasks.max": "1",
+    "database.hostname": "host.docker.internal",
+    "database.port": "3306",
+    "database.user": "${env:MYSQL_USER}",
+    "database.password": "${env:MYSQL_PASSWORD}",
+    "database.server.id": "184054",
+    "topic.prefix": "mysqlcdc",
+    "database.include.list": "cdc_test",
+    "schema.history.internal.kafka.bootstrap.servers": "cdc-kafka-kafka-bootstrap:9092",
+    "schema.history.internal.kafka.topic": "schema-changes.cdc_test",
+    "database.connectionTimeZone": "UTC"
+  }
+}

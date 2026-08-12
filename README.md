@@ -448,44 +448,41 @@ This **also failed**, with a different error:
 
 **Root cause:** Strimzi's `KafkaConnect` CRD expects the container image to contain Strimzi's own launcher scripts (`kafka\_connect\_run.sh`). Official Debezium images use a completely different startup mechanism (`docker-entrypoint.sh` + environment variables). You cannot simply swap in an arbitrary Connect image under Strimzi's CRD — the CRD and the image are tightly coupled.
 
-### 7.3 What actually worked: plain Kubernetes Deployment using Debezium's official image
+### 7.3 What actually worked: Custom Image + Strimzi KafkaConnect CRD
 
-Rather than fighting Strimzi's CRD, we deployed Kafka Connect as a **plain Deployment**, using Debezium's image exactly the way it's designed to run — via environment variables and its own native entrypoint.
+Rather than fighting Strimzi's registry build mechanism, we built a custom Kafka Connect image locally and loaded it into `kind`. This allowed us to use the proper Strimzi `KafkaConnect` CRD.
+
+First, build the custom image (which includes the Debezium MySQL plugin) and load it into the cluster:
+
+```bash
+docker build -t custom-debezium-connect:latest ./debezium
+kind load docker-image custom-debezium-connect:latest --name cdc-lab
+```
 
 `debezium/kafka-connect.yaml`:
 
 ```yaml
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaConnect
 metadata:
-  name: kafka-connect
+  name: cdc-connect
   namespace: kafka
+  annotations:
+    strimzi.io/use-connector-resources: "true"
 spec:
+  version: 4.2.0
   replicas: 1
-  selector:
-    matchLabels:
-      app: kafka-connect
-  template:
-    metadata:
-      labels:
-        app: kafka-connect
-    spec:
-      containers:
-        - name: kafka-connect
-          image: quay.io/debezium/connect:2.5
-          ports:
-            - containerPort: 8083
-          env:
-            - name: BOOTSTRAP\_SERVERS
-              value: "cdc-kafka-kafka-bootstrap:9092"
-            - name: GROUP\_ID
-              value: "cdc-connect-cluster"
-            - name: CONFIG\_STORAGE\_TOPIC
-              value: "cdc-connect-configs"
-            - name: OFFSET\_STORAGE\_TOPIC
-              value: "cdc-connect-offsets"
-            - name: STATUS\_STORAGE\_TOPIC
-              value: "cdc-connect-status"
+  image: custom-debezium-connect:latest
+  bootstrapServers: cdc-kafka-kafka-bootstrap:9092
+  config:
+    group.id: cdc-connect-cluster
+    offset.storage.topic: cdc-connect-offsets
+    config.storage.topic: cdc-connect-configs
+    status.storage.topic: cdc-connect-status
+    config.storage.replication.factor: -1
+    offset.storage.replication.factor: -1
+    status.storage.replication.factor: -1
+```
 ---
 apiVersion: v1
 kind: Service
@@ -527,78 +524,61 @@ Should list `io.debezium.connector.mysqlql.mysqlConnector`.
 
 \---
 
-## 8\. Registering Debezium Connectors
+## 8\. Registering Debezium Connectors (GitOps)
 
-Connector configs are registered via Kafka Connect's REST API — **not** applied via `kubectl`, since they're not Kubernetes resources. In this repo they're intentionally kept **outside** the Argo CD–managed path (see §10.4).
+Connector configs are now managed declaratively via Strimzi's `KafkaConnector` CRD, allowing Argo CD to fully manage their lifecycle.
 
 ### 8.1 Test connector (in-cluster mysql)
 
-`connector-configs/mysql-connector.json`:
+`connector-configs/mysql-connector.yaml`:
 
-```json
-{
-  "name": "inventory-connector",
-  "config": {
-    "connector.class": "io.debezium.connector.mysqlql.mysqlConnector",
-    "database.hostname": "mysql",
-    "database.port": "5432",
-    "database.user": "dbuser",
-    "database.password": "dbpassword",
-    "database.dbname": "inventory",
-    "topic.prefix": "dbserver1",
-    "plugin.name": "pgoutput"
-  }
-}
+```yaml
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaConnector
+metadata:
+  name: mysql-connector
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: cdc-connect
+spec:
+  class: io.debezium.connector.mysql.MySqlConnector
+  tasksMax: 1
+  config:
+    database.hostname: "host.docker.internal"
+    database.port: "3306"
+    database.user: "debezium"
+    database.password: "dbz_password"
+    database.server.id: "184054"
+    topic.prefix: "mysqlcdc"
+    database.include.list: "cdc_test"
+    database.connectionTimeZone: "UTC"
+    schema.history.internal.kafka.bootstrap.servers: "cdc-kafka-kafka-bootstrap:9092"
+    schema.history.internal.kafka.topic: "schema-changes.cdc_test"
 ```
 
-### 8.2 Real database connector (Windows-hosted PharmacieDB)
+### 8.2 Register a connector
 
-`connector-configs/windows-mysql-connector.json`:
-
-```json
-{
-  "name": "windows-mysql-connector",
-  "config": {
-    "connector.class": "io.debezium.connector.mysqlql.mysqlConnector",
-    "database.hostname": "host.docker.internal",
-    "database.port": "5432",
-    "database.user": "mysql",
-    "database.password": "",
-    "database.dbname": "PharmacieDB",
-    "topic.prefix": "winpg",
-    "plugin.name": "pgoutput",
-    "table.include.list": "public.Clients"
-  }
-}
-```
-
-> `table.include.list` restricts Debezium to a single table. Without it, Debezium performs an initial \*\*snapshot of every table\*\* in the database before switching to live streaming — with a 57-table, several-hundred-thousand-row database like `PharmacieDB`, this can take many minutes and delays seeing live events. Scoping to one table during testing makes the feedback loop much faster.
-
-### 8.3 Register a connector
+Simply apply the manifest (or let Argo CD sync it):
 
 ```bash
-kubectl cp connector-configs/windows-mysql-connector.json \\
-  kafka/<kafka-connect-pod-name>:/tmp/windows-mysql-connector.json
-
-kubectl exec -n kafka <kafka-connect-pod-name> -- \\
-  curl -s -X POST -H "Content-Type: application/json" \\
-  --data @/tmp/windows-mysql-connector.json localhost:8083/connectors
+kubectl apply -f connector-configs/mysql-connector.yaml
 ```
 
-### 8.4 Check connector/task status
+### 8.3 Check connector/task status
+
+You can check the status via Kubernetes native commands:
 
 ```bash
-kubectl exec -n kafka <kafka-connect-pod-name> -- \\
-  curl -s localhost:8083/connectors/windows-mysql-connector/status
+kubectl get kafkaconnector -n kafka
+kubectl describe kafkaconnector mysql-connector -n kafka
 ```
 
-Look for `"state":"RUNNING"` on both the connector and its task(s).
+Look for `Ready` in the status conditions.
 
-### 8.5 Delete a connector (e.g. to reconfigure it)
+### 8.4 Delete a connector
 
 ```bash
-kubectl exec -n kafka <kafka-connect-pod-name> -- \\
-  curl -s -X DELETE localhost:8083/connectors/windows-mysql-connector
+kubectl delete -f connector-configs/mysql-connector.yaml
 ```
 
 \---

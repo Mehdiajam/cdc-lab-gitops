@@ -19,6 +19,34 @@ spec:
           ports:
             - containerPort: 8083
           env:
+            - name: CONNECT_CONFIG_PROVIDERS
+              value: "env"
+            - name: CONNECT_CONFIG_PROVIDERS_ENV_CLASS
+              value: "org.apache.kafka.common.config.provider.EnvVarConfigProvider"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: postgres-user
+                  optional: true
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: postgres-password
+                  optional: true
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: mysql-user
+                  optional: true
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: mysql-password
+                  optional: true
             - name: BOOTSTRAP_SERVERS
               value: "cdc-kafka-kafka-bootstrap:9092"
             - name: GROUP_ID

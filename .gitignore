@@ -1,3 +1,6 @@
 *.tmp
 
 secrets.yaml
+
+*.sql
+test.sql

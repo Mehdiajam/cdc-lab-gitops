@@ -11,7 +11,7 @@ spec:
     targetRevision: HEAD
     directory:
       recurse: true
-      include: '{kafka/*.yaml,debezium/*.yaml,connector-configs/*.yaml,kafka-ui/*.yaml}'
+      include: '{kafka/*.yaml,debezium/*.yaml,connector-configs/*.yaml,kafka-ui/*.yaml,grafana-dashboards/*.yaml}'
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: kafka

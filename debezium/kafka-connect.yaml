@@ -37,7 +37,9 @@ spec:
               mountPath: /jmx-config
           ports:
             - containerPort: 8083
+              name: rest
             - containerPort: 8080
+              name: metrics
           env:
             - name: KAFKA_OPTS
               value: "-javaagent:/jmx/jmx_prometheus_javaagent.jar=8080:/jmx-config/config.yaml"

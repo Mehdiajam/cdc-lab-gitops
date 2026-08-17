@@ -29,7 +29,7 @@ spec:
               mountPath: /jmx
       containers:
         - name: kafka-connect
-          image: quay.io/debezium/connect:3.0
+          image: quay.io/debezium/connect:2.6.2.Final
           volumeMounts:
             - name: jmx-exporter
               mountPath: /jmx
@@ -41,6 +41,8 @@ spec:
             - containerPort: 8080
               name: metrics
           env:
+            - name: JMX_PORT
+              value: "9999"
             - name: KAFKA_OPTS
               value: "-javaagent:/jmx/jmx_prometheus_javaagent.jar=8080:/jmx-config/config.yaml"
             - name: CONNECT_CONFIG_PROVIDERS

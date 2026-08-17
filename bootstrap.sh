@@ -41,6 +41,9 @@ kubectl wait --for=condition=Available deployment/kafka-connect -n kafka --timeo
 echo "🚀 Registering Argo CD Application..."
 kubectl apply -f argocd/cdc-app.yaml
 
+echo "🚀 Registering Monitoring Stack (Prometheus/Grafana)..."
+kubectl apply -f argocd/monitoring-app.yaml
+
 echo "🚀 Registering Connectors via REST API..."
 # Wait for REST API to be up
 until kubectl exec deployment/kafka-connect -n kafka -- curl -s http://localhost:8083/ > /dev/null; do sleep 2; done;

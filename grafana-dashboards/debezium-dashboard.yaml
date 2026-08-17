@@ -3057,11 +3057,11 @@ data:
             "name": "name",
             "options": [],
             "query": {
-              "query": "debezium_metrics_binlogposition",
+              "query": "label_values(debezium_metrics_binlogposition, name)",
               "refId": "StandardVariableQuery"
             },
             "refresh": 1,
-            "regex": "/,name=\"([^\"]+)\".*/",
+            "regex": "",
             "skipUrlSync": false,
             "sort": 1,
             "tagValuesQuery": "",
@@ -3083,11 +3083,11 @@ data:
             "name": "instance",
             "options": [],
             "query": {
-              "query": "debezium_metrics_binlogposition",
+              "query": "label_values(debezium_metrics_binlogposition, instance)",
               "refId": "StandardVariableQuery"
             },
             "refresh": 1,
-            "regex": "/.*instance=\"([^\"]+)\".*/",
+            "regex": "",
             "skipUrlSync": false,
             "sort": 0,
             "tagValuesQuery": "",
@@ -3109,11 +3109,11 @@ data:
             "name": "context",
             "options": [],
             "query": {
-              "query": "debezium_metrics_millisecondssincelastevent",
+              "query": "label_values(debezium_metrics_millisecondssincelastevent, context)",
               "refId": "StandardVariableQuery"
             },
             "refresh": 1,
-            "regex": "/.*context=\"([^\"]+)\".*/",
+            "regex": "",
             "skipUrlSync": false,
             "sort": 0,
             "tagValuesQuery": "",
@@ -3135,11 +3135,11 @@ data:
             "name": "plugin",
             "options": [],
             "query": {
-              "query": "debezium_metrics_binlogposition",
+              "query": "label_values(debezium_metrics_binlogposition, plugin)",
               "refId": "StandardVariableQuery"
             },
             "refresh": 1,
-            "regex": "/.*plugin=\"([^\"]+)\".*/",
+            "regex": "",
             "skipUrlSync": false,
             "sort": 1,
             "tagValuesQuery": "",

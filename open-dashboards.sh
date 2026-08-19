@@ -19,12 +19,12 @@ kubectl wait --for=condition=Ready pods --all -n monitoring --timeout=300s
 echo "🧹 Cleaning up any old port-forwards..."
 pkill -f "kubectl port-forward svc/argocd-server" || true
 pkill -f "kubectl port-forward svc/kafka-ui" || true
-pkill -f "kubectl port-forward svc/grafana" || true
+pkill -f "kubectl port-forward svc/kube-prometheus-stack-grafana" || true
 
 echo "🚀 Starting Port Forwarding in the background..."
 kubectl port-forward svc/argocd-server -n argocd 8090:443 > /dev/null 2>&1 &
 kubectl port-forward svc/kafka-ui -n kafka 8081:8080 > /dev/null 2>&1 &
-kubectl port-forward svc/grafana -n monitoring 3000:80 > /dev/null 2>&1 &
+kubectl port-forward svc/kube-prometheus-stack-grafana -n monitoring 3000:80 > /dev/null 2>&1 &
 
 echo "🌐 Opening Dashboards in your browser..."
 explorer.exe "https://localhost:8090"

@@ -1,0 +1,7 @@
+config:
+  clients:
+    - url: http://172.19.0.3:32084/loki/api/v1/push
+  snippets:
+    extraRelabelConfigs:
+      - target_label: cluster
+        replacement: kind-cdc-lab

@@ -1,0 +1,15 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: insert-dummy-data
+spec:
+  template:
+    spec:
+      containers:
+      - name: mysql-client
+        image: alpine:latest
+        command: ["/bin/sh", "-c"]
+        args:
+        - apk add --no-cache mysql-client && mysql --skip-ssl -h host.docker.internal -u debezium -pdbz_password -e "INSERT INTO cdc_test.customers (first_name, last_name, email) VALUES ('Test', 'User', CONCAT('test', UNIX_TIMESTAMP(), '@example.com'));"
+      restartPolicy: Never
+  backoffLimit: 1

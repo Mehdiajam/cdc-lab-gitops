@@ -1,0 +1,183 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    grafana_dashboard: "1"
+  name: cdc-logs-dashboard
+  namespace: monitoring
+data:
+  cdc-logs-dashboard.json: |-
+    {
+      "__inputs": [],
+      "__elements": {},
+      "__requires": [],
+      "annotations": {
+        "list": []
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 2,
+          "title": "Logs Volume by Container",
+          "type": "timeseries",
+          "targets": [
+            {
+              "datasource": {
+                "type": "loki",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (container) (rate({cluster=\"$cluster\", container=~\"$container\"}[$__auto]))",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            }
+          }
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 16,
+            "w": 24,
+            "x": 0,
+            "y": 8
+          },
+          "id": 3,
+          "title": "CDC Pipeline Logs",
+          "type": "logs",
+          "targets": [
+            {
+              "datasource": {
+                "type": "loki",
+                "uid": "${datasource}"
+              },
+              "expr": "{cluster=\"$cluster\", container=~\"$container\"} |~ \"(?i)$search\"",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "showTime": true,
+            "showLabels": true,
+            "wrapLogMessage": true,
+            "sortOrder": "Descending"
+          }
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": [
+        "loki",
+        "cdc"
+      ],
+      "templating": {
+        "list": [
+          {
+            "current": {
+              "selected": false,
+              "text": "Loki",
+              "value": "Loki"
+            },
+            "hide": 0,
+            "includeAll": false,
+            "label": "Data Source",
+            "multi": false,
+            "name": "datasource",
+            "options": [],
+            "query": "loki",
+            "refresh": 1,
+            "regex": "",
+            "type": "datasource"
+          },
+          {
+            "current": {
+              "selected": false,
+              "text": "kind-cdc-lab",
+              "value": "kind-cdc-lab"
+            },
+            "datasource": {
+              "type": "loki",
+              "uid": "${datasource}"
+            },
+            "hide": 0,
+            "includeAll": true,
+            "label": "Cluster",
+            "name": "cluster",
+            "options": [],
+            "query": "label_values(cluster)",
+            "refresh": 1,
+            "type": "query"
+          },
+          {
+            "current": {
+              "selected": true,
+              "text": "All",
+              "value": "$__all"
+            },
+            "datasource": {
+              "type": "loki",
+              "uid": "${datasource}"
+            },
+            "hide": 0,
+            "includeAll": true,
+            "label": "Container",
+            "name": "container",
+            "options": [],
+            "query": "label_values({cluster=\"$cluster\"}, container)",
+            "refresh": 1,
+            "multi": true,
+            "type": "query"
+          },
+          {
+            "current": {
+              "selected": false,
+              "text": "",
+              "value": ""
+            },
+            "hide": 0,
+            "label": "Search Text",
+            "name": "search",
+            "options": [
+              {
+                "selected": true,
+                "text": "",
+                "value": ""
+              }
+            ],
+            "query": "",
+            "skipUrlSync": false,
+            "type": "textbox"
+          }
+        ]
+      },
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "CDC Logs Dashboard",
+      "uid": "cdc-logs-dash",
+      "version": 1
+    }
